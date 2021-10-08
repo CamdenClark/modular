@@ -1,14 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import WalletContext from "./WalletContext";
-import AppBar from "./AppBar";
 import reportWebVitals from "./reportWebVitals";
+import App from "./App";
 
 ReactDOM.render(
   <React.StrictMode>
-    <WalletContext>
-      <AppBar />
-    </WalletContext>
+    <App />
   </React.StrictMode>,
   document.getElementById("root")
 );

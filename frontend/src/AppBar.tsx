@@ -4,16 +4,28 @@ import {
   WalletMultiButton,
 } from "@solana/wallet-adapter-react-ui";
 
+import { AppBar, Grid, Toolbar, Typography } from "@mui/material";
 // default styling for solana wallets
 import "@solana/wallet-adapter-react-ui/styles.css";
 
-export const AppBar: FC = () => {
+export const Header: FC = () => {
   return (
-    <>
-      <WalletMultiButton />
-      <WalletDisconnectButton />
-    </>
+    <AppBar position="static">
+      <Toolbar>
+        <Grid container justifyContent="space-between" alignItems="center">
+          <Grid item xs={3}>
+            <Typography variant="h6" color="inherit" component="div">
+              Modular
+            </Typography>
+          </Grid>
+          <Grid container item xs={9} direction="row" justifyContent="flex-end">
+            <WalletMultiButton />
+            <WalletDisconnectButton />
+          </Grid>
+        </Grid>
+      </Toolbar>
+    </AppBar>
   );
 };
 
-export default AppBar;
+export default Header;
