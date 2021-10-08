@@ -1,13 +1,13 @@
 import { FC } from "react";
 import WalletContext from "./WalletContext";
-import AppBar from "./AppBar";
+import Header from "./Header";
 
 export const App: FC = () => {
   return (
     <WalletContext>
-      <AppBar />
+      <Header />
     </WalletContext>
   );
 };
 
-export default AppBar;
+export default App;
