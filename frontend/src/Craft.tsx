@@ -1,5 +1,4 @@
 import {
-  Box,
   Button,
   Card,
   CardActions,
@@ -79,7 +78,7 @@ const Craftables: FC = () => {
 };
 
 const RawMaterials: FC = () => {
-  return <Box border={1} minHeight={50}></Box>;
+  return <></>;
 };
 
 export const Craft: FC = () => {

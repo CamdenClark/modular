@@ -4,26 +4,39 @@ import {
   WalletMultiButton,
 } from "@solana/wallet-adapter-react-ui";
 
-  import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet } from "@solana/wallet-adapter-react";
 
-import { AppBar, Grid, Toolbar, Typography } from "@mui/material";
+import { AppBar, Grid, Link, Toolbar, Typography } from "@mui/material";
+
+import { Link as RouterLink } from "react-router-dom";
 // default styling for solana wallets
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export const Header: FC = () => {
   const { wallet } = useWallet();
-  console.log(wallet)
+  console.log(wallet);
 
   return (
     <AppBar position="static">
       <Toolbar>
         <Grid container justifyContent="space-between" alignItems="center">
-          <Grid item xs={3}>
-            <Typography variant="h6" color="inherit" component="div">
+          <Link component={RouterLink} to="/" color="secondary">
+            <Typography variant="h5" color="inherit" component="div">
               Modular
             </Typography>
-          </Grid>
-          <Grid container item xs={9} direction="row" justifyContent="flex-end">
+          </Link>
+          <Link component={RouterLink} to="/mine" color="secondary">
+            <Typography variant="h6">Mine</Typography>
+          </Link>
+          <Link component={RouterLink} to="/craft" color="secondary">
+            <Typography variant="h6">Craft</Typography>
+          </Link>
+
+          <Link component={RouterLink} to="/inventory" color="secondary">
+            <Typography variant="h6">Inventory</Typography>
+          </Link>
+
+          <Grid container item xs={6} direction="row" justifyContent="flex-end">
             <WalletMultiButton />
             {wallet && <WalletDisconnectButton />}
           </Grid>
