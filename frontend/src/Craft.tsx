@@ -3,12 +3,11 @@ import {
   Button,
   Card,
   CardActions,
-  CardActionArea,
   CardContent,
   Grid,
   Typography,
 } from "@mui/material";
-import { Component, FC } from "react";
+import { FC } from "react";
 import { items } from "./Items";
 
 /*

@@ -1,3 +1,4 @@
+/*
 enum BaseResource {
   stone = "stone",
   iron = "iron",
@@ -6,6 +7,7 @@ enum BaseResource {
   ruby = "ruby",
   wood = "wood",
 }
+*/
 
 type AbstractRecipe = {
   wood: number;
@@ -87,7 +89,7 @@ const baseItems: AbstractItem[] = [
 ];
 
 export const items: Item[] = baseResources
-  .filter((resource) => resource.id != "wood")
+  .filter((resource) => resource.id !== "wood")
   .flatMap((resource) =>
     baseItems.map((item) => ({
       title: resource.title + " " + item.title,
