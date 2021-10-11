@@ -66,7 +66,7 @@ const Craftables: FC = () => {
   return (
     <Grid container direction="row" spacing={2}>
       {items.map((item) => (
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={4} key={item.title}>
           <Craftable
             title={item.title}
             description={"test"}
