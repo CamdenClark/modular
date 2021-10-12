@@ -1,0 +1,9 @@
+[provider]
+cluster = "localnet"
+wallet = "/home/camden/.config/solana/id.json"
+
+[scripts]
+test = "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[programs.localnet]
+mysolanaapp = "Amnw44Y1sGRsjYG6ZSvT7uEzX3yc1vBEeb7tC8RrGhZR"

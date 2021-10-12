@@ -1,0 +1,60 @@
+{
+  "version": "0.0.0",
+  "name": "mysolanaapp",
+  "instructions": [
+    {
+      "name": "mine",
+      "accounts": [
+        {
+          "name": "miner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "modularProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "increment",
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "BaseAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "count",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "address": "Amnw44Y1sGRsjYG6ZSvT7uEzX3yc1vBEeb7tC8RrGhZR"
+  }
+}
