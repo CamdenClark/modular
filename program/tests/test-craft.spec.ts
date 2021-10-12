@@ -9,7 +9,6 @@ describe("test-craft", () => {
 
   const provider = anchor.getProvider();
   const program = anchor.workspace.Mysolanaapp;
-
   it("Setup mint and program", async () => {
     const mint = await createMint(provider, provider.wallet.publicKey);
 
@@ -21,14 +20,43 @@ describe("test-craft", () => {
       },
     });
 
-    const [_pda, _nonce] = await PublicKey.findProgramAddress(
+    const [pda, _nonce] = await PublicKey.findProgramAddress(
       [Buffer.from(anchor.utils.bytes.utf8.encode("modular"))],
       program.programId
     );
 
     const mintInfo = await serumCommon.getMintInfo(provider, mint);
 
-    assert.ok(mintInfo.mintAuthority.equals(_pda));
+    assert.ok(mintInfo.mintAuthority.equals(pda));
+
+    const toAccount = await createTokenAccount(
+      provider,
+      mint,
+      provider.wallet.publicKey
+    );
+
+    const toAccountBefore = await serumCommon.getTokenAccount(
+      provider,
+      toAccount
+    );
+
+    assert.ok(toAccountBefore.amount.eq(new anchor.BN(0)));
+
+    await program.rpc.mine({
+      accounts: {
+        mint,
+        pda,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+        miner: toAccount,
+      },
+    });
+
+    const toAccountAfter = await serumCommon.getTokenAccount(
+      provider,
+      toAccount
+    );
+
+    assert.ok(toAccountAfter.amount.eq(new anchor.BN(1)));
   });
 });
 

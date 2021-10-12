@@ -19,8 +19,19 @@ mod mysolanaapp {
     }
 
     pub fn mine(ctx: Context<Mine>) -> ProgramResult {
-        let (pda, _bump_seed) = Pubkey::find_program_address(&[MODULAR_PDA_SEED], ctx.program_id);
-        token::mint_to(ctx.accounts.into(), 1)
+        let (_pda, bump_seed) = Pubkey::find_program_address(&[MODULAR_PDA_SEED], ctx.program_id);
+        let cpi_accounts = MintTo {
+            to: ctx.accounts.miner.clone(),
+            authority: ctx.accounts.pda.clone(),
+            mint: ctx.accounts.mint.clone(),
+        };
+        let cpi_program = ctx.accounts.token_program.clone();
+
+        let seeds = &[&MODULAR_PDA_SEED[..], &[bump_seed]];
+        token::mint_to(
+            CpiContext::new(cpi_program, cpi_accounts).with_signer(&[&seeds[..]]),
+            1,
+        )
     }
 
     pub fn increment(ctx: Context<Increment>) -> ProgramResult {
@@ -42,10 +53,12 @@ pub struct RegisterMint<'info> {
 
 #[derive(Accounts)]
 pub struct Mine<'info> {
-    #[account(signer)]
+    #[account(mut)]
     pub miner: AccountInfo<'info>,
-    pub modular_program: AccountInfo<'info>,
+    #[account(mut)]
+    pub pda: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
+    #[account(mut)]
     pub mint: AccountInfo<'info>,
 }
 
@@ -60,19 +73,6 @@ pub struct Increment<'info> {
 #[account]
 pub struct BaseAccount {
     pub count: u64,
-}
-
-impl<'a, 'b, 'c, 'info> From<&mut Mine<'info>> for CpiContext<'a, 'b, 'c, 'info, MintTo<'info>> {
-    fn from(accounts: &mut Mine<'info>) -> CpiContext<'a, 'b, 'c, 'info, MintTo<'info>> {
-        let cpi_accounts = MintTo {
-            to: accounts.miner.clone(),
-            authority: accounts.modular_program.clone(),
-            mint: accounts.mint.clone(),
-        };
-        let cpi_program = accounts.token_program.clone();
-
-        CpiContext::new(cpi_program, cpi_accounts)
-    }
 }
 
 impl<'a, 'b, 'c, 'info> From<&mut RegisterMint<'info>>
