@@ -8,18 +8,27 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import idl from "./idl.json";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-const MineInventory = () => {
-  console.log("Mining!");
-};
-
 const { SystemProgram, Keypair } = web3;
-/* create an account  */
-const baseAccount = Keypair.generate();
+
 const programID = new PublicKey(idl.metadata.address);
 
-export const Mine: FC = () => {
+type Resource = {
+  address: PublicKey;
+  name: string;
+  rarity: number;
+};
+
+export const Mine = ({ resources, items }: any) => {
   const wallet: any = useWallet();
 
+  console.log("Mine");
+  console.log(resources);
+  console.log(
+    resources.map((resource: any) =>
+      String.fromCharCode(resource.name.filter((char: any) => char !== 0))
+    )
+  );
+  console.log(items);
   async function getProvider() {
     /* create the provider and return it to the caller */
     /* network set to local network for now */
@@ -31,17 +40,16 @@ export const Mine: FC = () => {
     return provider;
   }
 
-  async function createCounter() {
+  const mine = (resource: Resource) => async () => {
     const provider = await getProvider();
     /* create the program interface combining the idl, program ID, and provider */
     const program = new Program(idl as any, programID, provider);
     try {
-      console.log(baseAccount.publicKey.toString());
       console.log(SystemProgram.programId.toString());
       /* interact with the program via rpc */
       await program.rpc.mine({
         accounts: {
-          mint: new PublicKey("EARCSdhgXyqeLiWFpEzJWqMckJFfsw7koYwXXhMmPgj3"),
+          mint: resource.address,
           modularProgram: programID,
           miner: provider.wallet.publicKey,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -50,23 +58,8 @@ export const Mine: FC = () => {
     } catch (err) {
       console.log("Transaction error: ", err);
     }
-  }
+  };
 
-  async function increment() {
-    const provider = await getProvider();
-    const program = new Program(idl as any, programID, provider);
-    await program.rpc.increment({
-      accounts: {
-        baseAccount: baseAccount.publicKey,
-      },
-    });
-
-    const account = await program.account.baseAccount.fetch(
-      baseAccount.publicKey
-    );
-    console.log("account: ", account);
-    console.log(account.value.toString());
-  }
   return (
     <Grid container direction="row" justifyContent="center">
       <Grid
@@ -81,15 +74,21 @@ export const Mine: FC = () => {
       >
         <Typography variant="h1">Mine an inventory to get started!</Typography>
 
-        <Button
-          color="primary"
-          variant="outlined"
-          size="large"
-          onClick={createCounter}
-          style={{ marginTop: "3rem", padding: "2rem 5rem", fontSize: "2rem" }}
-        >
-          Mine
-        </Button>
+        {resources.map((resource: Resource) => (
+          <Button
+            color="primary"
+            variant="outlined"
+            size="large"
+            onClick={mine(resource)}
+            style={{
+              marginTop: "3rem",
+              padding: "2rem 5rem",
+              fontSize: "2rem",
+            }}
+          >
+            Mine
+          </Button>
+        ))}
       </Grid>
     </Grid>
   );
