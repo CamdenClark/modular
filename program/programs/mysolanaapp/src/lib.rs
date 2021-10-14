@@ -58,6 +58,57 @@ mod modular {
         Ok(())
     }
 
+    pub fn craft_item(ctx: Context<CraftItem>) -> ProgramResult {
+        let (_pda, bump_seed) = Pubkey::find_program_address(&[MODULAR_PDA_SEED], ctx.program_id);
+        let seeds = &[&MODULAR_PDA_SEED[..], &[bump_seed]];
+        let modular = ctx.accounts.modular.load()?;
+        let tokens: [AccountInfo; 3] = [
+            ctx.accounts.item_one.clone(),
+            ctx.accounts.item_two.clone(),
+            ctx.accounts.item_three.clone(),
+        ];
+        let source_accounts = [
+            ctx.accounts.source_one.clone(),
+            ctx.accounts.source_two.clone(),
+            ctx.accounts.source_three.clone(),
+        ];
+        for item in modular.items.iter() {
+            if item.address == ctx.accounts.craft_target.key() {
+                for i in 0usize..3 {
+                    let count = item.recipes[i].clone().count;
+                    let source = source_accounts[i].clone();
+                    if count > 0 {
+                        token::burn(
+                            CpiContext::new(
+                                ctx.accounts.token_program.clone(),
+                                Burn {
+                                    mint: tokens[i].clone(),
+                                    to: source,
+                                    authority: ctx.accounts.crafter.clone(),
+                                },
+                            ),
+                            count.into(),
+                        )?
+                    }
+                }
+            }
+        }
+
+        let cpi_accounts = MintTo {
+            to: ctx.accounts.crafter_account.clone(),
+            authority: ctx.accounts.pda.clone(),
+            mint: ctx.accounts.craft_target.clone(),
+        };
+        let cpi_program = ctx.accounts.token_program.clone();
+
+        token::mint_to(
+            CpiContext::new(cpi_program, cpi_accounts).with_signer(&[&seeds[..]]),
+            1,
+        )?;
+
+        Ok(())
+    }
+
     pub fn register_resource(
         ctx: Context<RegisterMint>,
         name: String,
@@ -86,7 +137,7 @@ mod modular {
     pub fn mine(ctx: Context<Mine>) -> ProgramResult {
         let (_pda, bump_seed) = Pubkey::find_program_address(&[MODULAR_PDA_SEED], ctx.program_id);
         let cpi_accounts = MintTo {
-            to: ctx.accounts.miner.clone(),
+            to: ctx.accounts.resource_account.clone(),
             authority: ctx.accounts.pda.clone(),
             mint: ctx.accounts.mint.clone(),
         };
@@ -95,7 +146,7 @@ mod modular {
         let seeds = &[&MODULAR_PDA_SEED[..], &[bump_seed]];
         token::mint_to(
             CpiContext::new(cpi_program, cpi_accounts).with_signer(&[&seeds[..]]),
-            1,
+            2,
         )
     }
 }
@@ -125,6 +176,33 @@ pub struct RegisterItem<'info> {
     pub item_three: AccountInfo<'info>,
 }
 
+#[derive(Accounts)]
+pub struct CraftItem<'info> {
+    #[account(signer)]
+    pub crafter: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+    #[account(mut)]
+    pub pda: AccountInfo<'info>,
+    #[account(mut)]
+    pub crafter_account: AccountInfo<'info>,
+    #[account(mut)]
+    pub modular: Loader<'info, Modular>,
+    #[account(mut)]
+    pub item_one: AccountInfo<'info>,
+    #[account(mut)]
+    pub item_two: AccountInfo<'info>,
+    #[account(mut)]
+    pub item_three: AccountInfo<'info>,
+    #[account(mut)]
+    pub source_one: AccountInfo<'info>,
+    #[account(mut)]
+    pub source_two: AccountInfo<'info>,
+    #[account(mut)]
+    pub source_three: AccountInfo<'info>,
+    #[account(mut)]
+    pub craft_target: AccountInfo<'info>,
+}
+
 // Transaction instructions
 #[derive(Accounts)]
 pub struct RegisterMint<'info> {
@@ -141,6 +219,8 @@ pub struct RegisterMint<'info> {
 pub struct Mine<'info> {
     #[account(signer)]
     pub miner: AccountInfo<'info>,
+    #[account(mut)]
+    pub resource_account: AccountInfo<'info>,
     #[account(mut)]
     pub pda: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,

@@ -4,6 +4,7 @@ import * as assert from "assert";
 import * as serumCommon from "@project-serum/common";
 import { PublicKey } from "@solana/web3.js";
 import { encode } from "@project-serum/anchor/dist/utils/bytes/hex";
+import { publicKey } from "@project-serum/anchor/dist/utils";
 
 describe("test-craft", () => {
   anchor.setProvider(anchor.Provider.env());
@@ -98,57 +99,63 @@ describe("test-craft", () => {
     assert.equal(2, modularInitialized.items[0].recipes[0].count);
     assert.ok(modularInitialized.items[0].recipes[0].item.equals(resourceMint));
   });
-  /*
+
   it("Setup mint and program", async () => {
-    const mint = await createMint(provider, provider.wallet.publicKey);
-
-    await program.rpc.registerMint({
-      accounts: {
-        miner: provider.wallet.publicKey,
-        mint,
-        tokenProgram: spl.TOKEN_PROGRAM_ID,
-      },
-    });
-
     const [pda, _nonce] = await PublicKey.findProgramAddress(
       [Buffer.from(anchor.utils.bytes.utf8.encode("modular"))],
       program.programId
     );
 
-    const mintInfo = await serumCommon.getMintInfo(provider, mint);
-
-    assert.ok(mintInfo.mintAuthority.equals(pda));
-
-    const toAccount = await createTokenAccount(
+    const crafter = await createTokenAccount(
       provider,
-      mint,
+      itemMint,
       provider.wallet.publicKey
     );
 
-    const toAccountBefore = await serumCommon.getTokenAccount(
+    const sourceOne = await createTokenAccount(
       provider,
-      toAccount
+      resourceMint,
+      provider.wallet.publicKey
     );
-
-    assert.ok(toAccountBefore.amount.eq(new anchor.BN(0)));
 
     await program.rpc.mine({
       accounts: {
-        mint,
+        miner: provider.wallet.publicKey,
+        resourceAccount: sourceOne,
+        mint: resourceMint,
         pda,
         tokenProgram: spl.TOKEN_PROGRAM_ID,
-        miner: toAccount,
       },
     });
 
-    const toAccountAfter = await serumCommon.getTokenAccount(
+    const crafterBefore = await serumCommon.getTokenAccount(
       provider,
-      toAccount
+      sourceOne
     );
 
-    assert.ok(toAccountAfter.amount.eq(new anchor.BN(1)));
+    assert.ok(crafterBefore.amount.eq(new anchor.BN(2)));
+
+    await program.rpc.craftItem({
+      accounts: {
+        crafter: provider.wallet.publicKey,
+        crafterAccount: crafter,
+        craftTarget: itemMint,
+        itemOne: resourceMint,
+        itemTwo: anchor.web3.Keypair.generate().publicKey,
+        itemThree: anchor.web3.Keypair.generate().publicKey,
+        sourceOne,
+        sourceTwo: anchor.web3.Keypair.generate().publicKey,
+        sourceThree: anchor.web3.Keypair.generate().publicKey,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+        modular: modular.publicKey,
+        pda,
+      },
+    });
+
+    const crafterAfter = await serumCommon.getTokenAccount(provider, crafter);
+
+    assert.ok(crafterAfter.amount.eq(new anchor.BN(1)));
   });
-  */
 });
 
 async function createMint(provider, authority) {
