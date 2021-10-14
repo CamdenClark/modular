@@ -11,6 +11,8 @@ import { Program, Provider, web3 } from "@project-serum/anchor";
 import { useWallet } from "@solana/wallet-adapter-react";
 import idl from "./idl.json";
 import InitializeModular from "./Init";
+import Register from "./Register";
+import { Environment } from "./Modular";
 
 const programID = new PublicKey(idl.metadata.address);
 
@@ -33,7 +35,9 @@ export const App = ({ resources, items }: any) => {
           <Route path="/mine">
             <Mine items={items} resources={resources} />
           </Route>
-          <Route path="/register"></Route>
+          <Route path="/register">
+            <Register environment={Environment.localhost} />
+          </Route>
         </Switch>
       </Router>
     </WalletContext>

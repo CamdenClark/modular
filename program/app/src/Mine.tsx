@@ -1,24 +1,9 @@
 import { Button, Grid, Typography } from "@mui/material";
-import { FC } from "react";
 
-import { Connection, PublicKey } from "@solana/web3.js";
-import { Program, Provider, web3 } from "@project-serum/anchor";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { mine, Resource } from "./Modular";
 
-import idl from "./idl.json";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
-const { SystemProgram, Keypair } = web3;
-
-const programID = new PublicKey(idl.metadata.address);
-
-type Resource = {
-  address: PublicKey;
-  name: string;
-  rarity: number;
-};
-
-export const Mine = ({ resources, items }: any) => {
+export const Mine = ({ environment, resources, items }: any) => {
   const wallet: any = useWallet();
 
   console.log("Mine");
@@ -29,36 +14,6 @@ export const Mine = ({ resources, items }: any) => {
     )
   );
   console.log(items);
-  async function getProvider() {
-    /* create the provider and return it to the caller */
-    /* network set to local network for now */
-    const network = "http://127.0.0.1:8899";
-    const connection = new Connection(network, "processed");
-    const provider = new Provider(connection, wallet, {
-      preflightCommitment: "processed",
-    });
-    return provider;
-  }
-
-  const mine = (resource: Resource) => async () => {
-    const provider = await getProvider();
-    /* create the program interface combining the idl, program ID, and provider */
-    const program = new Program(idl as any, programID, provider);
-    try {
-      console.log(SystemProgram.programId.toString());
-      /* interact with the program via rpc */
-      await program.rpc.mine({
-        accounts: {
-          mint: resource.address,
-          modularProgram: programID,
-          miner: provider.wallet.publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        },
-      });
-    } catch (err) {
-      console.log("Transaction error: ", err);
-    }
-  };
 
   return (
     <Grid container direction="row" justifyContent="center">
@@ -79,7 +34,7 @@ export const Mine = ({ resources, items }: any) => {
             color="primary"
             variant="outlined"
             size="large"
-            onClick={mine(resource)}
+            onClick={() => mine(environment, wallet, resource)}
             style={{
               marginTop: "3rem",
               padding: "2rem 5rem",
