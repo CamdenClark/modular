@@ -4,18 +4,83 @@ use anchor_spl::token::{self, Burn, InitializeMint, MintTo, SetAuthority, Transf
 declare_id!("Amnw44Y1sGRsjYG6ZSvT7uEzX3yc1vBEeb7tC8RrGhZR");
 
 #[program]
-mod mysolanaapp {
+mod modular {
     use super::*;
 
     const MODULAR_PDA_SEED: &[u8] = b"modular";
 
-    pub fn register_mint(ctx: Context<RegisterMint>) -> ProgramResult {
+    pub fn initialize_modular(ctx: Context<InitializeModular>) -> ProgramResult {
+        Ok(())
+    }
+
+    pub fn register_item(
+        ctx: Context<RegisterItem>,
+        name: String,
+        recipe_counts: [u8; 3],
+    ) -> ProgramResult {
+        let (pda, _bump_seed) = Pubkey::find_program_address(&[MODULAR_PDA_SEED], ctx.program_id);
+        token::set_authority(
+            CpiContext::new(
+                ctx.accounts.item_mint.clone(),
+                SetAuthority {
+                    account_or_mint: ctx.accounts.item_mint.clone(),
+                    current_authority: ctx.accounts.miner.clone(),
+                },
+            ),
+            spl_token::instruction::AuthorityType::MintTokens,
+            Some(pda),
+        )?;
+        let recipes = [
+            Recipe {
+                item: ctx.accounts.item_one.key(),
+                count: recipe_counts[0],
+            },
+            Recipe {
+                item: ctx.accounts.item_two.key(),
+                count: recipe_counts[1],
+            },
+            Recipe {
+                item: ctx.accounts.item_three.key(),
+                count: recipe_counts[2],
+            },
+        ];
+        let mut modular = ctx.accounts.modular.load_mut()?;
+        modular.add_item({
+            let src = name.as_bytes();
+            let mut data = [0u8; 280];
+            data[..src.len()].copy_from_slice(src);
+            Item {
+                address: ctx.accounts.item_mint.key(),
+                name: data,
+                recipes,
+            }
+        });
+        Ok(())
+    }
+
+    pub fn register_resource(
+        ctx: Context<RegisterMint>,
+        name: String,
+        rarity: u8,
+    ) -> ProgramResult {
         let (pda, _bump_seed) = Pubkey::find_program_address(&[MODULAR_PDA_SEED], ctx.program_id);
         token::set_authority(
             ctx.accounts.into(),
             spl_token::instruction::AuthorityType::MintTokens,
             Some(pda),
-        )
+        )?;
+        let mut modular = ctx.accounts.modular.load_mut()?;
+        modular.add_resource({
+            let src = name.as_bytes();
+            let mut data = [0u8; 280];
+            data[..src.len()].copy_from_slice(src);
+            Resource {
+                address: ctx.accounts.mint.key(),
+                name: data,
+                rarity,
+            }
+        });
+        Ok(())
     }
 
     pub fn mine(ctx: Context<Mine>) -> ProgramResult {
@@ -33,12 +98,31 @@ mod mysolanaapp {
             1,
         )
     }
+}
 
-    pub fn increment(ctx: Context<Increment>) -> ProgramResult {
-        let base_account = &mut ctx.accounts.base_account;
-        base_account.count += 1;
-        Ok(())
-    }
+// Transaction instructions
+#[derive(Accounts)]
+pub struct InitializeModular<'info> {
+    #[account(zero)]
+    modular: Loader<'info, Modular>,
+}
+
+// Transaction instructions
+#[derive(Accounts)]
+pub struct RegisterItem<'info> {
+    #[account(signer)]
+    pub miner: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+    #[account(mut)]
+    pub modular: Loader<'info, Modular>,
+    #[account(mut)]
+    pub item_mint: AccountInfo<'info>,
+    #[account(mut)]
+    pub item_one: AccountInfo<'info>,
+    #[account(mut)]
+    pub item_two: AccountInfo<'info>,
+    #[account(mut)]
+    pub item_three: AccountInfo<'info>,
 }
 
 // Transaction instructions
@@ -48,12 +132,14 @@ pub struct RegisterMint<'info> {
     pub miner: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     #[account(mut)]
+    pub modular: Loader<'info, Modular>,
+    #[account(mut)]
     pub mint: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
 pub struct Mine<'info> {
-    #[account(mut)]
+    #[account(signer)]
     pub miner: AccountInfo<'info>,
     #[account(mut)]
     pub pda: AccountInfo<'info>,
@@ -62,17 +148,54 @@ pub struct Mine<'info> {
     pub mint: AccountInfo<'info>,
 }
 
-// Transaction instructions
-#[derive(Accounts)]
-pub struct Increment<'info> {
-    #[account(mut)]
-    pub base_account: Account<'info, BaseAccount>,
+#[zero_copy]
+pub struct Resource {
+    address: Pubkey,
+    name: [u8; 280],
+    rarity: u8,
 }
 
-// An account that goes inside a transaction instruction
-#[account]
-pub struct BaseAccount {
-    pub count: u64,
+#[zero_copy]
+pub struct Recipe {
+    item: Pubkey,
+    count: u8,
+}
+
+#[zero_copy]
+pub struct Item {
+    name: [u8; 280],
+    recipes: [Recipe; 3],
+    address: Pubkey,
+}
+
+#[account(zero_copy)]
+pub struct Modular {
+    resources: [Resource; 10], // Leaves the account at 10,485,680 bytes.
+    items: [Item; 1000],       // Leaves the account at 10,485,680 bytes.
+    items_count: i16,
+    resources_count: i16,
+}
+
+impl Modular {
+    fn add_resource(&mut self, resource: Resource) {
+        if self.resources_count == 10 {
+            return;
+        }
+        self.resources[Modular::index_of(self.resources_count)] = resource;
+        self.resources_count += 1;
+    }
+
+    fn add_item(&mut self, item: Item) {
+        if self.items_count == 1000 {
+            return;
+        }
+        self.items[Modular::index_of(self.items_count)] = item;
+        self.items_count += 1;
+    }
+
+    fn index_of(counter: i16) -> usize {
+        std::convert::TryInto::try_into(counter % 1000).unwrap()
+    }
 }
 
 impl<'a, 'b, 'c, 'info> From<&mut RegisterMint<'info>>
