@@ -152,6 +152,10 @@ describe("test-craft", () => {
       },
     });
 
+    const sourceAfter = await serumCommon.getTokenAccount(provider, sourceOne);
+
+    assert.ok(sourceAfter.amount.eq(new anchor.BN(0)));
+
     const crafterAfter = await serumCommon.getTokenAccount(provider, crafter);
 
     assert.ok(crafterAfter.amount.eq(new anchor.BN(1)));

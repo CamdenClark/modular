@@ -12,7 +12,9 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import idl from "./idl.json";
 import InitializeModular from "./Init";
 import Register from "./Register";
-import { Environment } from "./Modular";
+import Inventory from "./Inventory";
+import { Environment, getInventory, Item, Resource } from "./Modular";
+import { GetInventory } from "./Program";
 
 const programID = new PublicKey(idl.metadata.address);
 
@@ -20,7 +22,7 @@ const addresses = {
   localhost: "Gys3HBiLvkse2kXm78pyzPFykvNhywdsBjm41DWPDky8",
 };
 
-export const App = ({ resources, items }: any) => {
+export const App = ({ resources, items, inventory }: any) => {
   return (
     <WalletContext>
       <Router>
@@ -30,8 +32,21 @@ export const App = ({ resources, items }: any) => {
             <InitializeModular />
           </Route>
           <Route path="/craft">
-            <Craft />
+            <Craft
+              environment={Environment.localhost}
+              items={items}
+              resources={resources}
+            />
           </Route>
+          <Route path="/inventory">
+            <Inventory
+              environment={Environment.localhost}
+              items={items}
+              resources={resources}
+              inventory={inventory}
+            />
+          </Route>
+
           <Route path="/mine">
             <Mine
               environment={Environment.localhost}
@@ -53,6 +68,7 @@ const AppWithData: FC = () => {
 
   const [resources, setResources] = useState([]);
   const [items, setItems] = useState([]);
+  const [inventory, setInventory] = useState({});
 
   async function getProvider() {
     const network = "http://127.0.0.1:8899";
@@ -73,33 +89,35 @@ const AppWithData: FC = () => {
 
   useMemo(() => {
     getModular().then((modular) => {
-      console.log("Modular");
-      console.log(modular);
       if (modular) {
-        setResources(
-          modular.resources.map((resource: any) => {
-            const name = String.fromCharCode(
-              ...resource.name.filter((char: number) => char !== 0)
-            );
-            return {
-              ...resource,
-              name,
-            };
-          })
-        );
-        setItems(
-          modular.items.map((item: any) => ({
+        const items = modular.items
+          .map((item: any) => ({
             ...item,
             name: String.fromCharCode(
               ...item.name.filter((char: number) => char !== 0)
             ),
           }))
+          .filter((item: Resource) => item.name.length !== 0);
+        setResources(
+          modular.resources
+            .map((resource: any) => {
+              const name = String.fromCharCode(
+                ...resource.name.filter((char: number) => char !== 0)
+              );
+              return {
+                ...resource,
+                name,
+              };
+            })
+            .filter((resource: Resource) => resource.name.length !== 0)
         );
+        setItems(items);
+        getInventory(wallet, items).then(setInventory);
       }
     });
   }, [wallet]);
 
-  return <App resources={resources} items={items} />;
+  return <App resources={resources} items={items} inventory={inventory} />;
 };
 
 export default AppWithData;

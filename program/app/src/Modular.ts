@@ -4,9 +4,10 @@ import idl from "./idl.json";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
-  Token,
 } from "@solana/spl-token";
 import { getTokenAccount, createTokenAccount } from "@project-serum/common";
+import { associatedAddress } from "@project-serum/anchor/dist/cjs/utils/token";
+import { associated } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 
 enum Environment {
   localhost,
@@ -29,22 +30,6 @@ export type Item = {
   name: string;
   recipes: Recipe[];
 };
-
-async function findAssociatedTokenAddress(
-  walletAddress: PublicKey,
-  tokenMintAddress: PublicKey
-): Promise<PublicKey> {
-  return (
-    await PublicKey.findProgramAddress(
-      [
-        walletAddress.toBuffer(),
-        TOKEN_PROGRAM_ID.toBuffer(),
-        tokenMintAddress.toBuffer(),
-      ],
-      ASSOCIATED_TOKEN_PROGRAM_ID
-    )
-  )[0];
-}
 
 const programID = new PublicKey(idl.metadata.address);
 const getModularAddress = (environment: Environment) => {
@@ -171,17 +156,20 @@ async function mine(
     program.programId
   );
 
-  let resourceAccount = await findAssociatedTokenAddress(
-    provider.wallet.publicKey,
-    resource.address
-  );
+  let resourceAccount = await associatedAddress({
+    owner: provider.wallet.publicKey,
+    mint: resource.address,
+  });
+  console.log("Mine address");
+  console.log(resource.address.toBase58());
+
   try {
-    await getTokenAccount(provider, provider.wallet.publicKey);
+    await getTokenAccount(provider, resourceAccount);
   } catch (e) {
     resourceAccount = await createTokenAccount(
       provider,
       resource.address,
-      provider.wallet.publicKey
+      resourceAccount
     );
   }
   const accounts = {
@@ -211,66 +199,99 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
     program.programId
   );
 
-  const crafterAccount = await findAssociatedTokenAddress(
-    provider.wallet.publicKey,
-    item.address
-  );
+  let crafterAccount = await associatedAddress({
+    owner: provider.wallet.publicKey,
+    mint: item.address,
+  });
   try {
     await getTokenAccount(provider, crafterAccount);
   } catch {
-    await createTokenAccount(provider, item.address, provider.wallet.publicKey);
+    crafterAccount = await createTokenAccount(
+      provider,
+      item.address,
+      crafterAccount
+    );
   }
 
-  let itemOne = new PublicKey("0");
-  let sourceOne = new PublicKey("0");
+  let itemOne = web3.Keypair.generate().publicKey;
+  let sourceOne = web3.Keypair.generate().publicKey;
   if (item.recipes[0].count > 0) {
     itemOne = item.recipes[0].item;
-    sourceOne = await findAssociatedTokenAddress(
-      provider.wallet.publicKey,
-      item.recipes[0].item
-    );
+    sourceOne = await associatedAddress({
+      owner: provider.wallet.publicKey,
+      mint: item.recipes[0].item,
+    });
+    console.log("test items");
+    console.log(itemOne.toBase58());
+    console.log(sourceOne.toBase58());
+    console.log(await getTokenAccount(provider, sourceOne));
   }
 
-  let itemTwo = new PublicKey("0");
-  let sourceTwo = new PublicKey("0");
+  let itemTwo = web3.Keypair.generate().publicKey;
+  let sourceTwo = web3.Keypair.generate().publicKey;
   if (item.recipes[1].count > 0) {
-    itemOne = item.recipes[1].item;
-    sourceOne = await findAssociatedTokenAddress(
-      provider.wallet.publicKey,
-      item.recipes[1].item
-    );
+    itemTwo = item.recipes[1].item;
+    sourceTwo = await associatedAddress({
+      owner: provider.wallet.publicKey,
+      mint: item.recipes[1].item,
+    });
   }
 
-  let itemThree = new PublicKey("0");
-  let sourceThree = new PublicKey("0");
+  let itemThree = web3.Keypair.generate().publicKey;
+  let sourceThree = web3.Keypair.generate().publicKey;
   if (item.recipes[2].count > 0) {
-    itemOne = item.recipes[2].item;
-    sourceOne = await findAssociatedTokenAddress(
-      provider.wallet.publicKey,
-      item.recipes[2].item
-    );
+    itemThree = item.recipes[2].item;
+    sourceThree = await associatedAddress({
+      owner: provider.wallet.publicKey,
+      mint: item.recipes[2].item,
+    });
   }
+
+  const accounts = {
+    crafter: provider.wallet.publicKey,
+    crafterAccount,
+    craftTarget: item.address,
+    modular,
+    pda,
+    itemOne,
+    itemTwo,
+    itemThree,
+    sourceOne,
+    sourceTwo,
+    sourceThree,
+    tokenProgram: TOKEN_PROGRAM_ID,
+  };
+  console.log(accounts);
 
   await program.rpc.craftItem({
-    accounts: {
-      crafter: provider.wallet.publicKey,
-      crafterAccount,
-      craftTarget: item.address,
-      modular,
-      pda,
-      itemOne,
-      itemTwo,
-      itemThree,
-      sourceOne,
-      sourceTwo,
-      sourceThree,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    },
+    accounts,
   });
+}
+
+async function getInventory(wallet: Wallet, items: Item[]) {
+  const provider = await getProvider(wallet);
+  if (wallet && provider.wallet.publicKey) {
+    return await Promise.all(
+      items.map(async (item) => ({
+        address: item.address.toBase58(),
+        account: await getTokenAccount(
+          provider,
+          await associatedAddress({
+            owner: provider.wallet.publicKey,
+            mint: item.address,
+          })
+        ),
+      }))
+    ).then((accounts) =>
+      accounts.filter((item) => item.account.amount.toNumber() > 0)
+    );
+  }
+  return {};
 }
 
 export {
   Environment,
+  getInventory,
   getModular,
   craftItem,
   mine,
