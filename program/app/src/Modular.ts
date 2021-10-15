@@ -1,13 +1,9 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Program, Provider, Wallet, utils, web3 } from "@project-serum/anchor";
 import idl from "./idl.json";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { getTokenAccount, createTokenAccount } from "@project-serum/common";
 import { associatedAddress } from "@project-serum/anchor/dist/cjs/utils/token";
-import { associated } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 
 enum Environment {
   localhost,
@@ -36,13 +32,16 @@ const getModularAddress = (environment: Environment) => {
   if (environment === Environment.localhost) {
     return new PublicKey("Gys3HBiLvkse2kXm78pyzPFykvNhywdsBjm41DWPDky8");
   }
-  return null;
+  return new PublicKey("3ooWHHm6pWukM2JmcDscaCbHXD9wEjVEBekR7zKm9vM6");
 };
 
-async function getProvider(wallet: Wallet) {
+async function getProvider(environment: Environment, wallet: Wallet) {
   /* create the provider and return it to the caller */
   /* network set to local network for now */
-  const network = "http://127.0.0.1:8899";
+  const network =
+    environment === Environment.localhost
+      ? "http://127.0.0.1:8899"
+      : "https://api.devnet.solana.com";
   const connection = new Connection(network, "processed");
   const provider = new Provider(connection, wallet, {
     preflightCommitment: "processed",
@@ -50,16 +49,18 @@ async function getProvider(wallet: Wallet) {
   return provider;
 }
 
-async function getModular(wallet: Wallet) {
-  const provider = await getProvider(wallet);
+async function getModular(environment: Environment, wallet: Wallet) {
+  const provider = await getProvider(environment, wallet);
   const program = new Program(idl as any, programID, provider);
-  const modularInitialized = await program.account.modular.fetch(programID);
+  console.log(program.account);
+  const modular = program.account.modular;
+  const modularInitialized = await modular.fetch(programID);
   return modularInitialized;
 }
 
-async function initModular(wallet: Wallet) {
+async function initModular(environment: Environment, wallet: Wallet) {
   const modular = web3.Keypair.generate();
-  const provider = await getProvider(wallet);
+  const provider = await getProvider(environment, wallet);
   const program = new Program(idl as any, programID, provider);
   await program.rpc.initializeModular({
     accounts: {
@@ -68,6 +69,7 @@ async function initModular(wallet: Wallet) {
     instructions: [await program.account.modular.createInstruction(modular)],
     signers: [modular],
   });
+  console.log(modular.publicKey.toBase58());
 }
 
 async function registerResource(
@@ -83,7 +85,7 @@ async function registerResource(
   if (!modular) {
     return;
   }
-  const provider = await getProvider(wallet);
+  const provider = await getProvider(environment, wallet);
   const program = new Program(idl as any, programID, provider);
   await program.rpc.registerResource(name, rarity, {
     accounts: {
@@ -123,7 +125,7 @@ async function registerItem(
       ? new PublicKey(components[2])
       : web3.Keypair.generate().publicKey;
 
-  const provider = await getProvider(wallet);
+  const provider = await getProvider(environment, wallet);
   const program = new Program(idl as any, programID, provider);
   await program.rpc.registerItem(name, counts, {
     accounts: {
@@ -148,7 +150,7 @@ async function mine(
     return;
   }
 
-  const provider = await getProvider(wallet);
+  const provider = await getProvider(environment, wallet);
   const program = new Program(idl as any, programID, provider);
 
   const [pda, _nonce] = await PublicKey.findProgramAddress(
@@ -191,7 +193,7 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
     return;
   }
 
-  const provider = await getProvider(wallet);
+  const provider = await getProvider(environment, wallet);
   const program = new Program(idl as any, programID, provider);
 
   const [pda, _nonce] = await PublicKey.findProgramAddress(
@@ -224,7 +226,6 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
     console.log("test items");
     console.log(itemOne.toBase58());
     console.log(sourceOne.toBase58());
-    console.log(await getTokenAccount(provider, sourceOne));
   }
 
   let itemTwo = web3.Keypair.generate().publicKey;
@@ -268,20 +269,30 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
   });
 }
 
-async function getInventory(wallet: Wallet, items: Item[]) {
-  const provider = await getProvider(wallet);
+async function getInventory(
+  environment: Environment,
+  wallet: Wallet,
+  items: Item[]
+) {
+  const provider = await getProvider(environment, wallet);
   if (wallet && provider.wallet.publicKey) {
     return await Promise.all(
-      items.map(async (item) => ({
-        address: item.address.toBase58(),
-        account: await getTokenAccount(
-          provider,
-          await associatedAddress({
-            owner: provider.wallet.publicKey,
-            mint: item.address,
-          })
-        ),
-      }))
+      items.map(async (item) => {
+        const token = new Token(
+          provider.connection,
+          item.address,
+          TOKEN_PROGRAM_ID,
+          wallet.payer
+        );
+        console.log(token.publicKey);
+        console.log(token.programId);
+        return {
+          address: item.address.toBase58(),
+          account: await token.getOrCreateAssociatedAccountInfo(
+            provider.wallet.publicKey
+          ),
+        };
+      })
     ).then((accounts) =>
       accounts.filter((item) => item.account.amount.toNumber() > 0)
     );

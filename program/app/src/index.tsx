@@ -2,10 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 import reportWebVitals from "./reportWebVitals";
 import App from "./App";
+import WalletContext from "./WalletContext";
+import { Environment } from "./Modular";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <WalletContext>
+      <App environment={Environment.devnet} />
+    </WalletContext>
   </React.StrictMode>,
   document.getElementById("root")
 );

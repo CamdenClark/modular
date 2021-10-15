@@ -14,7 +14,6 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 
 export const Header: FC = () => {
   const { wallet } = useWallet();
-  console.log(wallet);
 
   return (
     <AppBar position="static">
