@@ -6,15 +6,6 @@ import { mine, Resource } from "./Modular";
 export const Mine = ({ environment, resources, items }: any) => {
   const wallet: any = useWallet();
 
-  console.log("Mine");
-  console.log(resources);
-  console.log(
-    resources.map((resource: any) =>
-      String.fromCharCode(resource.name.filter((char: any) => char !== 0))
-    )
-  );
-  console.log(items);
-
   return (
     <Grid container direction="row" justifyContent="center">
       <Grid

@@ -48,7 +48,6 @@ async function findAssociatedTokenAddress(
 
 const programID = new PublicKey(idl.metadata.address);
 const getModularAddress = (environment: Environment) => {
-  console.log(environment);
   if (environment === Environment.localhost) {
     return new PublicKey("Gys3HBiLvkse2kXm78pyzPFykvNhywdsBjm41DWPDky8");
   }
@@ -84,8 +83,6 @@ async function initModular(wallet: Wallet) {
     instructions: [await program.account.modular.createInstruction(modular)],
     signers: [modular],
   });
-  console.log("Initialized!");
-  console.log(modular.publicKey.toBase58());
 }
 
 async function registerResource(
@@ -128,9 +125,18 @@ async function registerItem(
     return;
   }
 
-  const itemOne = new PublicKey(components[0]);
-  const itemTwo = new PublicKey(components[1]);
-  const itemThree = new PublicKey(components[2]);
+  const itemOne =
+    components[0].length > 0
+      ? new PublicKey(components[0])
+      : web3.Keypair.generate().publicKey;
+  const itemTwo =
+    components[1].length > 0
+      ? new PublicKey(components[1])
+      : web3.Keypair.generate().publicKey;
+  const itemThree =
+    components[2].length > 0
+      ? new PublicKey(components[2])
+      : web3.Keypair.generate().publicKey;
 
   const provider = await getProvider(wallet);
   const program = new Program(idl as any, programID, provider);
@@ -165,28 +171,29 @@ async function mine(
     program.programId
   );
 
-  const resourceAccount = await findAssociatedTokenAddress(
+  let resourceAccount = await findAssociatedTokenAddress(
     provider.wallet.publicKey,
     resource.address
   );
   try {
-    await getTokenAccount(provider, resourceAccount);
-  } catch {
-    await createTokenAccount(
+    await getTokenAccount(provider, provider.wallet.publicKey);
+  } catch (e) {
+    resourceAccount = await createTokenAccount(
       provider,
       resource.address,
       provider.wallet.publicKey
     );
   }
+  const accounts = {
+    miner: provider.wallet.publicKey,
+    resourceAccount,
+    mint: resource.address,
+    pda,
+    tokenProgram: TOKEN_PROGRAM_ID,
+  };
 
   await program.rpc.mine({
-    accounts: {
-      miner: provider.wallet.publicKey,
-      resourceAccount,
-      mint: resource.address,
-      pda,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    },
+    accounts,
   });
 }
 

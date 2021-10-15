@@ -36,6 +36,10 @@ export const Header: FC = () => {
             <Typography variant="h6">Inventory</Typography>
           </Link>
 
+          <Link component={RouterLink} to="/register" color="secondary">
+            <Typography variant="h6">Register</Typography>
+          </Link>
+
           <Grid container item xs={6} direction="row" justifyContent="flex-end">
             <WalletMultiButton />
             {wallet && <WalletDisconnectButton />}

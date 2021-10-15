@@ -33,7 +33,11 @@ export const App = ({ resources, items }: any) => {
             <Craft />
           </Route>
           <Route path="/mine">
-            <Mine items={items} resources={resources} />
+            <Mine
+              environment={Environment.localhost}
+              items={items}
+              resources={resources}
+            />
           </Route>
           <Route path="/register">
             <Register environment={Environment.localhost} />
@@ -64,15 +68,33 @@ const AppWithData: FC = () => {
     const modularInitialized = await program.account.modular.fetch(
       new web3.PublicKey(addresses.localhost)
     );
-    console.log(modularInitialized);
     return modularInitialized;
   }
 
   useMemo(() => {
     getModular().then((modular) => {
+      console.log("Modular");
+      console.log(modular);
       if (modular) {
-        setResources(modular.resources);
-        setItems(modular.items);
+        setResources(
+          modular.resources.map((resource: any) => {
+            const name = String.fromCharCode(
+              ...resource.name.filter((char: number) => char !== 0)
+            );
+            return {
+              ...resource,
+              name,
+            };
+          })
+        );
+        setItems(
+          modular.items.map((item: any) => ({
+            ...item,
+            name: String.fromCharCode(
+              ...item.name.filter((char: number) => char !== 0)
+            ),
+          }))
+        );
       }
     });
   }, [wallet]);

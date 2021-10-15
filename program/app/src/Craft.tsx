@@ -87,16 +87,6 @@ const RawMaterials: FC = () => {
 export const Craft: FC = () => {
   const wallet: any = useWallet();
 
-  async function getProvider() {
-    /* create the provider and return it to the caller */
-    /* network set to local network for now */
-    const network = "http://127.0.0.1:8899";
-    const connection = new Connection(network);
-
-    const provider = new Provider(connection, wallet, {});
-    return provider;
-  }
-
   return (
     <Grid container direction="row">
       <Grid item xs={12} style={{ marginTop: "2rem" }}>
