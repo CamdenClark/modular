@@ -53,7 +53,9 @@ async function getModular(environment: Environment, wallet: Wallet) {
   const program = new Program(idl as any, programID, provider);
   console.log(program.account);
   const modular = program.account.modular;
-  const modularInitialized = await modular.fetch(programID);
+  const modularInitialized = await modular.fetch(
+    getModularAddress(environment)
+  );
   return modularInitialized;
 }
 

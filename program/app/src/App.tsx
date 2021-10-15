@@ -10,6 +10,8 @@ import InitializeModular from "./Init";
 import Register from "./Register";
 import Inventory from "./Inventory";
 
+import { getModular, Resource, getInventory } from "./Modular";
+
 export const App = ({ environment, resources, items, inventory }: any) => {
   return (
     <Router>
@@ -53,7 +55,6 @@ const AppWithData = ({ environment }: any) => {
   const [inventory, setInventory] = useState({});
 
   useMemo(() => {
-    /*
     if (wallet) {
       getModular(environment, wallet).then((modular) => {
         if (modular) {
@@ -83,7 +84,6 @@ const AppWithData = ({ environment }: any) => {
         }
       });
     }
-    */
   }, [wallet]);
 
   return (
