@@ -2,7 +2,6 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { Program, Provider, Wallet, utils, web3 } from "@project-serum/anchor";
 import idl from "./idl.json";
 import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
-import { getTokenAccount, createTokenAccount } from "@project-serum/common";
 import { associatedAddress } from "@project-serum/anchor/dist/cjs/utils/token";
 
 enum Environment {
@@ -158,25 +157,20 @@ async function mine(
     program.programId
   );
 
-  let resourceAccount = await associatedAddress({
-    owner: provider.wallet.publicKey,
-    mint: resource.address,
-  });
-  console.log("Mine address");
-  console.log(resource.address.toBase58());
+  const token = new Token(
+    provider.connection,
+    resource.address,
+    TOKEN_PROGRAM_ID,
+    wallet.payer
+  );
 
-  try {
-    await getTokenAccount(provider, resourceAccount);
-  } catch (e) {
-    resourceAccount = await createTokenAccount(
-      provider,
-      resource.address,
-      resourceAccount
-    );
-  }
+  const resourceAccount = await token.getOrCreateAssociatedAccountInfo(
+    provider.wallet.publicKey
+  );
+
   const accounts = {
     miner: provider.wallet.publicKey,
-    resourceAccount,
+    resourceAccount: resourceAccount.address,
     mint: resource.address,
     pda,
     tokenProgram: TOKEN_PROGRAM_ID,
@@ -200,20 +194,16 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
     [Buffer.from(utils.bytes.utf8.encode("modular"))],
     program.programId
   );
+  const token = new Token(
+    provider.connection,
+    item.address,
+    TOKEN_PROGRAM_ID,
+    wallet.payer
+  );
 
-  let crafterAccount = await associatedAddress({
-    owner: provider.wallet.publicKey,
-    mint: item.address,
-  });
-  try {
-    await getTokenAccount(provider, crafterAccount);
-  } catch {
-    crafterAccount = await createTokenAccount(
-      provider,
-      item.address,
-      crafterAccount
-    );
-  }
+  const crafterAccount = await token.getOrCreateAssociatedAccountInfo(
+    provider.wallet.publicKey
+  );
 
   let itemOne = web3.Keypair.generate().publicKey;
   let sourceOne = web3.Keypair.generate().publicKey;
@@ -223,9 +213,6 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
       owner: provider.wallet.publicKey,
       mint: item.recipes[0].item,
     });
-    console.log("test items");
-    console.log(itemOne.toBase58());
-    console.log(sourceOne.toBase58());
   }
 
   let itemTwo = web3.Keypair.generate().publicKey;
@@ -250,7 +237,7 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
 
   const accounts = {
     crafter: provider.wallet.publicKey,
-    crafterAccount,
+    crafterAccount: crafterAccount.address,
     craftTarget: item.address,
     modular,
     pda,

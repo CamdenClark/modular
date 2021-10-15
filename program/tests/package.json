@@ -1,0 +1,21 @@
+{
+  "name": "tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@project-serum/anchor": "^0.17.1-beta.1",
+    "@project-serum/common": "^0.0.1-beta.3",
+    "@solana/spl-token": "^0.1.8",
+    "@solana/web3.js": "^1.29.2",
+    "chai": "^4.3.4"
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.0.0"
+  }
+}

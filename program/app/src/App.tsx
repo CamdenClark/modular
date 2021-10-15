@@ -9,7 +9,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import InitializeModular from "./Init";
 import Register from "./Register";
 import Inventory from "./Inventory";
-import { getInventory, getModular, Resource } from "./Modular";
 
 export const App = ({ environment, resources, items, inventory }: any) => {
   return (
@@ -54,6 +53,7 @@ const AppWithData = ({ environment }: any) => {
   const [inventory, setInventory] = useState({});
 
   useMemo(() => {
+    /*
     if (wallet) {
       getModular(environment, wallet).then((modular) => {
         if (modular) {
@@ -83,6 +83,7 @@ const AppWithData = ({ environment }: any) => {
         }
       });
     }
+    */
   }, [wallet]);
 
   return (

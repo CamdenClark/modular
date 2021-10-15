@@ -3,8 +3,6 @@ import * as spl from "@solana/spl-token";
 import * as assert from "assert";
 import * as serumCommon from "@project-serum/common";
 import { PublicKey } from "@solana/web3.js";
-import { encode } from "@project-serum/anchor/dist/utils/bytes/hex";
-import { publicKey } from "@project-serum/anchor/dist/utils";
 
 describe("test-craft", () => {
   anchor.setProvider(anchor.Provider.env());
