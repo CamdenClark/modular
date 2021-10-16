@@ -18,14 +18,14 @@ const RegisterResource = ({ environment }: any) => {
       xs={10}
       md={8}
       direction="row"
-      justifyContent="flexStart"
+      justifyContent="space-between"
       alignItems="center"
       style={{ marginTop: "5rem" }}
     >
       <Grid item xs={12}>
         <Typography variant="h6">Register a resource</Typography>
       </Grid>
-      <Grid item xs={8}>
+      <Grid item xs={8} style={{ marginTop: 10 }}>
         <TextField
           id="name"
           onChange={(e) => setName(e.target.value)}
@@ -34,7 +34,7 @@ const RegisterResource = ({ environment }: any) => {
           value={name}
         />
       </Grid>
-      <Grid item xs={8}>
+      <Grid item xs={8} style={{ marginTop: 10 }}>
         <TextField
           id="mint"
           onChange={(e) => setMint(e.target.value)}
@@ -43,12 +43,15 @@ const RegisterResource = ({ environment }: any) => {
           fullWidth
         />
       </Grid>
-      <TextField
-        id="rarity"
-        onChange={(e) => setRarity(parseInt(e.target.value))}
-        label="Rarity"
-        value={rarity.toString()}
-      />
+      <Grid item xs={2}>
+        <TextField
+          id="rarity"
+          onChange={(e) => setRarity(parseInt(e.target.value))}
+          label="Rarity"
+          value={rarity.toString()}
+          fullWidth
+        />
+      </Grid>
       <Button
         color="primary"
         variant="outlined"
@@ -56,8 +59,9 @@ const RegisterResource = ({ environment }: any) => {
         onClick={() =>
           registerResource(environment, wallet, name, rarity, mint)
         }
+        style={{ marginTop: 10 }}
       >
-        Register item
+        Register Resource
       </Button>
     </Grid>
   );
@@ -88,46 +92,63 @@ const RegisterItem = ({ environment }: any) => {
       <Grid item xs={12}>
         <Typography variant="h6">Register an item</Typography>
       </Grid>
-      <TextField
-        id="name"
-        onChange={(e) => setName(e.target.value)}
-        label="Name"
-        value={name}
-      />
-      <TextField
-        id="mint"
-        onChange={(e) => setMint(e.target.value)}
-        label="Mint"
-        value={mint}
-      />
+      <Grid item xs={12} md={8} style={{ marginTop: 10 }}>
+        <TextField
+          id="name"
+          onChange={(e) => setName(e.target.value)}
+          label="Name"
+          value={name}
+          fullWidth
+        />
+      </Grid>
+      <Grid item xs={12} md={8} style={{ marginTop: 10 }}>
+        <TextField
+          id="mint"
+          onChange={(e) => setMint(e.target.value)}
+          label="Mint"
+          value={mint}
+          fullWidth
+        />
+      </Grid>
       {components.map((component, i) => (
-        <>
-          <TextField
-            id={"component" + i}
-            onChange={(e) =>
-              setComponents((components) => {
-                const newComponents = [...components];
+        <Grid
+          container
+          item
+          xs={12}
+          style={{ marginTop: 10 }}
+          justifyContent={"space-between"}
+        >
+          <Grid item xs={8}>
+            <TextField
+              id={"component" + i}
+              onChange={(e) =>
+                setComponents((components) => {
+                  const newComponents = [...components];
 
-                newComponents[i].address = e.target.value;
-                return newComponents;
-              })
-            }
-            label={"Component item mint " + i}
-            value={component.address}
-          />
-          <TextField
-            id={"Component count " + i}
-            onChange={(e) =>
-              setComponents((components) => {
-                const newComponents = [...components];
-                newComponents[i].count = parseInt(e.target.value);
-                return newComponents;
-              })
-            }
-            label="Count"
-            value={component.count.toString()}
-          />
-        </>
+                  newComponents[i].address = e.target.value;
+                  return newComponents;
+                })
+              }
+              label={"Component item mint " + i}
+              value={component.address}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={2}>
+            <TextField
+              id={"Component count " + i}
+              onChange={(e) =>
+                setComponents((components) => {
+                  const newComponents = [...components];
+                  newComponents[i].count = parseInt(e.target.value);
+                  return newComponents;
+                })
+              }
+              label="Count"
+              value={component.count.toString()}
+            />
+          </Grid>
+        </Grid>
       ))}
       <Button
         color="primary"
@@ -143,13 +164,9 @@ const RegisterItem = ({ environment }: any) => {
             mint
           )
         }
-        style={{
-          marginTop: "3rem",
-          padding: "2rem 5rem",
-          fontSize: "2rem",
-        }}
+        style={{ marginTop: 10 }}
       >
-        Mine
+        Register Item
       </Button>
     </Grid>
   );

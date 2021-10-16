@@ -17,6 +17,7 @@ const Craftable = ({ environment, item }: any) => {
     <Card variant="outlined">
       <CardContent>
         <Typography variant="h4">{item.name}</Typography>
+        <Typography>Address: {item.address.toBase58()}</Typography>
       </CardContent>
       <CardActions>
         <Button onClick={() => craftItem(environment, wallet, item)}>
@@ -29,9 +30,9 @@ const Craftable = ({ environment, item }: any) => {
 
 const Craftables = ({ environment, items, resources }: any) => {
   return (
-    <Grid container direction="row" spacing={2}>
+    <Grid container direction="row" spacing={2} justifyContent="space-around">
       {items.map((item: Item) => (
-        <Grid item xs={12} md={4} key={item.address.toBase58()}>
+        <Grid item xs={12} md={5} key={item.address.toBase58()}>
           <Craftable environment={environment} item={item} />
         </Grid>
       ))}

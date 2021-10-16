@@ -29,9 +29,7 @@ export const Mine = ({ environment, resources, items }: any) => {
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="h4">{resource.name}</Typography>
-                <Typography variant="h6">
-                  Address: {resource.address.toBase58()}
-                </Typography>
+                <Typography>Address: {resource.address.toBase58()}</Typography>
               </CardContent>
               <CardActions>
                 <Button onClick={() => mine(environment, wallet, resource)}>

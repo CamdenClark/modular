@@ -11,6 +11,7 @@ import Register from "./Register";
 import Inventory from "./Inventory";
 
 import { getModular, Resource, getInventory } from "./Modular";
+import About from "./About";
 
 export const App = ({ environment, resources, items, inventory }: any) => {
   return (
@@ -18,7 +19,7 @@ export const App = ({ environment, resources, items, inventory }: any) => {
       <Header />
       <Switch>
         <Route exact path="/">
-          <InitializeModular environment={environment} />
+          <About />
         </Route>
         <Route path="/craft">
           <Craft
