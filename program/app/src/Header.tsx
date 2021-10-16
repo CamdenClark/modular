@@ -19,23 +19,23 @@ export const Header: FC = () => {
     <AppBar position="static">
       <Toolbar>
         <Grid container justifyContent="space-between" alignItems="center">
-          <Link component={RouterLink} to="/" color="secondary">
+          <Link component={RouterLink} to="/" color="rgb(255,255,255)">
             <Typography variant="h5" color="inherit" component="div">
               Modular
             </Typography>
           </Link>
-          <Link component={RouterLink} to="/mine" color="secondary">
+          <Link component={RouterLink} to="/mine" color="rgb(255,255,255)">
             <Typography variant="h6">Mine</Typography>
           </Link>
-          <Link component={RouterLink} to="/craft" color="secondary">
+          <Link component={RouterLink} to="/craft" color="rgb(255,255,255)">
             <Typography variant="h6">Craft</Typography>
           </Link>
 
-          <Link component={RouterLink} to="/inventory" color="secondary">
+          <Link component={RouterLink} to="/inventory" color="rgb(255,255,255)">
             <Typography variant="h6">Inventory</Typography>
           </Link>
 
-          <Link component={RouterLink} to="/register" color="secondary">
+          <Link component={RouterLink} to="/register" color="rgb(255,255,255)">
             <Typography variant="h6">Register</Typography>
           </Link>
 
