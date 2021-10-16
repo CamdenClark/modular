@@ -221,7 +221,6 @@ pub struct Mine<'info> {
     pub miner: AccountInfo<'info>,
     #[account(mut)]
     pub resource_account: AccountInfo<'info>,
-    #[account(mut)]
     pub pda: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     #[account(mut)]

@@ -1,4 +1,11 @@
-import { Button, Grid, Typography } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Grid,
+  Typography,
+} from "@mui/material";
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { mine, Resource } from "./Modular";
@@ -11,29 +18,28 @@ export const Mine = ({ environment, resources, items }: any) => {
       <Grid
         container
         item
-        xs={10}
-        md={8}
+        xs={12}
         direction="row"
-        justifyContent="flexStart"
+        justifyContent="space-around"
         alignItems="center"
         style={{ marginTop: "5rem" }}
       >
-        <Typography variant="h1">Mine an inventory to get started!</Typography>
-
         {resources.map((resource: Resource) => (
-          <Button
-            color="primary"
-            variant="outlined"
-            size="large"
-            onClick={() => mine(environment, wallet, resource)}
-            style={{
-              marginTop: "3rem",
-              padding: "2rem 5rem",
-              fontSize: "2rem",
-            }}
-          >
-            Mine
-          </Button>
+          <Grid item xs={12} md={5}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h4">{resource.name}</Typography>
+                <Typography variant="h6">
+                  Address: {resource.address.toBase58()}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button onClick={() => mine(environment, wallet, resource)}>
+                  Mine
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
         ))}
       </Grid>
     </Grid>

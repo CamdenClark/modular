@@ -159,27 +159,26 @@ async function mine(
     program.programId
   );
 
-  const token = new Token(
-    provider.connection,
-    resource.address,
-    TOKEN_PROGRAM_ID,
-    wallet.payer
-  );
-
-  const resourceAccount = await token.getOrCreateAssociatedAccountInfo(
-    provider.wallet.publicKey
-  );
+  const resourceAccount = await associatedAddress({
+    mint: resource.address,
+    owner: provider.wallet.publicKey,
+  });
+  console.log("resourceAccount");
+  console.log(resourceAccount.toBase58());
 
   const accounts = {
     miner: provider.wallet.publicKey,
-    resourceAccount: resourceAccount.address,
+    resourceAccount,
     mint: resource.address,
     pda,
     tokenProgram: TOKEN_PROGRAM_ID,
   };
 
+  console.log(Object.values(accounts).map((account) => account.toBase58()));
+
   await program.rpc.mine({
     accounts,
+    signers: [wallet.payer],
   });
 }
 
@@ -196,16 +195,11 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
     [Buffer.from(utils.bytes.utf8.encode("modular"))],
     program.programId
   );
-  const token = new Token(
-    provider.connection,
-    item.address,
-    TOKEN_PROGRAM_ID,
-    wallet.payer
-  );
 
-  const crafterAccount = await token.getOrCreateAssociatedAccountInfo(
-    provider.wallet.publicKey
-  );
+  const crafterAccount = await associatedAddress({
+    owner: provider.wallet.publicKey,
+    mint: item.address,
+  });
 
   let itemOne = web3.Keypair.generate().publicKey;
   let sourceOne = web3.Keypair.generate().publicKey;
@@ -239,7 +233,7 @@ async function craftItem(environment: Environment, wallet: Wallet, item: Item) {
 
   const accounts = {
     crafter: provider.wallet.publicKey,
-    crafterAccount: crafterAccount.address,
+    crafterAccount,
     craftTarget: item.address,
     modular,
     pda,
